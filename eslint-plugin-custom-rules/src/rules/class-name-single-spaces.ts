@@ -1,10 +1,11 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
+import { ESLintUtils, AST_NODE_TYPES } from "@typescript-eslint/utils";
 
 export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
     type: "layout",
     messages: {
       classNameSingleSpaces: "Only single spaces should be used in className",
+      cornerCharactersSpaces: "Corner characters should not be spaces",
     },
     schema: [],
   },
@@ -14,12 +15,11 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
       JSXAttribute(node) {
         const checkLiteralValueSpaces = (value: unknown) => {
           if (value && typeof value === "string") {
-            if (
-              value.startsWith(" ") ||
-              value.endsWith(" ") ||
-              value.includes("  ")
-            ) {
+            if (value.includes("  ")) {
               context.report({ node, messageId: "classNameSingleSpaces" });
+            }
+            if (value.endsWith(" ") || value.startsWith(" ")) {
+              context.report({ node, messageId: "cornerCharactersSpaces" });
             }
           }
         };
@@ -34,6 +34,10 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
 
           quasis.forEach((templateElement: any) => {
             const value = templateElement.value.raw;
+            if (value === " " || value === "  ") {
+              checkLiteralValueSpaces(value);
+              return;
+            }
             const trimmedValue = value.slice(1, value.length - 1);
             if (trimmedValue) {
               notEmptyTemplateElements.push(trimmedValue);
@@ -46,57 +50,61 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         };
         const checkTemplateLiteralExpressionsSpaces = (expressions: any[]) => {
           expressions.forEach((expression) => {
-            if (expression.type === "Literal") {
+            if (expression.type === AST_NODE_TYPES.Literal) {
               checkLiteralValueSpaces(expression);
             }
-            if (expression.type === "ConditionalExpression") {
+            if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
               checkConditionalExpression(expression);
             }
-            if (expression.type === "LogicalExpression") {
+            if (expression.type === AST_NODE_TYPES.LogicalExpression) {
               checkLogicalExpression(expression);
             }
           });
         };
 
         const checkConditionalExpression = (expression: any) => {
-          if (expression.consequent.type === "Literal") {
+          if (expression.consequent.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(expression.consequent.value);
           }
-          if (expression.alternate.type === "Literal") {
+          if (expression.alternate.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(expression.alternate.value);
           }
-          if (expression.consequent.type === "TemplateLiteral") {
+          if (expression.consequent.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.consequent.quasis);
             checkTemplateLiteralExpressionsSpaces(
               expression.consequent.expressions
             );
           }
-          if (expression.alternate.type === "TemplateLiteral") {
+          if (expression.alternate.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.alternate.quasis);
             checkTemplateLiteralExpressionsSpaces(
               expression.alternate.expressions
             );
           }
-          if (expression.consequent.type === "ConditionalExpression") {
+          if (
+            expression.consequent.type === AST_NODE_TYPES.ConditionalExpression
+          ) {
             checkConditionalExpression(expression.consequent);
           }
-          if (expression.alternate.type === "ConditionalExpression") {
+          if (
+            expression.alternate.type === AST_NODE_TYPES.ConditionalExpression
+          ) {
             checkConditionalExpression(expression.alternate);
           }
         };
 
         const checkLogicalExpression = (expression: any) => {
-          if (expression.right.type === "Literal") {
+          if (expression.right.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(expression.right.value);
           }
-          if (expression.right.type === "TemplateLiteral") {
+          if (expression.right.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.right.quasis);
             checkTemplateLiteralExpressionsSpaces(expression.right.expressions);
           }
-          if (expression.right.type === "ConditionalExpression") {
+          if (expression.right.type === AST_NODE_TYPES.ConditionalExpression) {
             checkConditionalExpression(expression.right);
           }
-          if (expression.right.type === "LogicalExpression") {
+          if (expression.right.type === AST_NODE_TYPES.LogicalExpression) {
             checkLogicalExpression(expression.right);
           }
         };
@@ -105,38 +113,38 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         const attributeValue = node.value;
 
         if (isClassName && attributeValue) {
-          if (attributeValue.type === "Literal") {
+          if (attributeValue.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(attributeValue.value);
           }
 
-          if (attributeValue.type === "JSXExpressionContainer") {
+          if (attributeValue.type === AST_NODE_TYPES.JSXExpressionContainer) {
             const expression = attributeValue.expression;
 
-            if (expression.type === "Literal") {
+            if (expression.type === AST_NODE_TYPES.Literal) {
               checkLiteralValueSpaces(expression.value);
             }
 
-            if (expression.type === "TemplateLiteral") {
+            if (expression.type === AST_NODE_TYPES.TemplateLiteral) {
               checkTemplateLiteralQuasisSpaces(expression.quasis);
               checkTemplateLiteralExpressionsSpaces(expression.expressions);
             }
 
-            if (expression.type === "CallExpression") {
+            if (expression.type === AST_NODE_TYPES.CallExpression) {
               expression.arguments.forEach((argument) => {
-                if (argument.type === "Literal") {
+                if (argument.type === AST_NODE_TYPES.Literal) {
                   checkLiteralValueSpaces(argument.value);
                 }
 
-                if (argument.type === "TemplateLiteral") {
+                if (argument.type === AST_NODE_TYPES.TemplateLiteral) {
                   checkTemplateLiteralQuasisSpaces(argument.quasis);
                   checkTemplateLiteralExpressionsSpaces(argument.expressions);
                 }
 
-                if (argument.type === "LogicalExpression") {
+                if (argument.type === AST_NODE_TYPES.LogicalExpression) {
                   checkLogicalExpression(argument);
                 }
 
-                if (argument.type === "ConditionalExpression") {
+                if (argument.type === AST_NODE_TYPES.ConditionalExpression) {
                   checkConditionalExpression(argument);
                 }
               });
