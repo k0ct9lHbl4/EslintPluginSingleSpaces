@@ -1,6 +1,5 @@
 import { twMerge } from "tailwind-merge";
 
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 export default function Home() {
   const randomBoolean = Math.random() > 0.5;
 
@@ -16,8 +15,6 @@ export default function Home() {
         <p className="text-green-600">Not empty literal className</p>
         <p className="">Empty literal className</p>
         <p className={""}>JSXExpression empty className</p>
-        {/* @ts-ignore */}
-        <p className={}>Empty JSXExpression className</p>
         <p className={`text-blue-700 ${true ? "font-semibold" : ""}`}>
           JSXExpression template className
         </p>
