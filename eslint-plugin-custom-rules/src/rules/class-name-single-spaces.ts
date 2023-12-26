@@ -1,4 +1,8 @@
-import { ESLintUtils, AST_NODE_TYPES } from "@typescript-eslint/utils";
+import {
+  ESLintUtils,
+  AST_NODE_TYPES,
+  TSESTree,
+} from "@typescript-eslint/utils";
 
 export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
@@ -24,7 +28,9 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           }
         };
 
-        const checkTemplateLiteralQuasisSpaces = (quasis: any[]) => {
+        const checkTemplateLiteralQuasisSpaces = (
+          quasis: TSESTree.TemplateElement[]
+        ) => {
           const notEmptyTemplateElements: string[] = [];
 
           if (quasis.length === 1) {
@@ -48,7 +54,9 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
             checkLiteralValueSpaces(templateElement);
           });
         };
-        const checkTemplateLiteralExpressionsSpaces = (expressions: any[]) => {
+        const checkTemplateLiteralExpressionsSpaces = (
+          expressions: TSESTree.Expression[]
+        ) => {
           expressions.forEach((expression) => {
             if (expression.type === AST_NODE_TYPES.Literal) {
               checkLiteralValueSpaces(expression);
@@ -62,7 +70,9 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           });
         };
 
-        const checkConditionalExpression = (expression: any) => {
+        const checkConditionalExpression = (
+          expression: TSESTree.ConditionalExpression
+        ) => {
           if (expression.consequent.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(expression.consequent.value);
           }
@@ -93,7 +103,9 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           }
         };
 
-        const checkLogicalExpression = (expression: any) => {
+        const checkLogicalExpression = (
+          expression: TSESTree.LogicalExpression
+        ) => {
           if (expression.right.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(expression.right.value);
           }
