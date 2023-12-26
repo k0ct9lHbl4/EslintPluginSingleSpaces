@@ -59,13 +59,16 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         ) => {
           expressions.forEach((expression) => {
             if (expression.type === AST_NODE_TYPES.Literal) {
-              checkLiteralValueSpaces(expression);
+              checkLiteralValueSpaces(expression.value);
             }
             if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
               checkConditionalExpression(expression);
             }
             if (expression.type === AST_NODE_TYPES.LogicalExpression) {
               checkLogicalExpression(expression);
+            }
+            if (expression.type === AST_NODE_TYPES.BinaryExpression) {
+              checkBinaryExpression(expression);
             }
           });
         };
@@ -101,6 +104,18 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           ) {
             checkConditionalExpression(expression.alternate);
           }
+          if (expression.consequent.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(expression.consequent);
+          }
+          if (expression.alternate.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(expression.alternate);
+          }
+          if (expression.consequent.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(expression.consequent);
+          }
+          if (expression.alternate.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(expression.alternate);
+          }
         };
 
         const checkLogicalExpression = (
@@ -118,6 +133,46 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           }
           if (expression.right.type === AST_NODE_TYPES.LogicalExpression) {
             checkLogicalExpression(expression.right);
+          }
+          if (expression.right.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(expression.right);
+          }
+        };
+
+        const checkBinaryExpression = (
+          expression: TSESTree.BinaryExpression
+        ) => {
+          if (expression.left.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(expression.left.value);
+          }
+          if (expression.right.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(expression.right.value);
+          }
+          if (expression.left.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(expression.left.quasis);
+            checkTemplateLiteralExpressionsSpaces(expression.left.expressions);
+          }
+          if (expression.right.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(expression.right.quasis);
+            checkTemplateLiteralExpressionsSpaces(expression.right.expressions);
+          }
+          if (expression.left.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(expression.left);
+          }
+          if (expression.right.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(expression.right);
+          }
+          if (expression.left.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(expression.left);
+          }
+          if (expression.right.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(expression.right);
+          }
+          if (expression.left.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(expression.left);
+          }
+          if (expression.right.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(expression.right);
           }
         };
 
@@ -141,6 +196,18 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
               checkTemplateLiteralExpressionsSpaces(expression.expressions);
             }
 
+            if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
+              checkConditionalExpression(expression);
+            }
+
+            if (expression.type === AST_NODE_TYPES.LogicalExpression) {
+              checkLogicalExpression(expression);
+            }
+
+            if (expression.type === AST_NODE_TYPES.BinaryExpression) {
+              checkBinaryExpression(expression);
+            }
+
             if (expression.type === AST_NODE_TYPES.CallExpression) {
               expression.arguments.forEach((argument) => {
                 if (argument.type === AST_NODE_TYPES.Literal) {
@@ -152,12 +219,16 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
                   checkTemplateLiteralExpressionsSpaces(argument.expressions);
                 }
 
+                if (argument.type === AST_NODE_TYPES.ConditionalExpression) {
+                  checkConditionalExpression(argument);
+                }
+
                 if (argument.type === AST_NODE_TYPES.LogicalExpression) {
                   checkLogicalExpression(argument);
                 }
 
-                if (argument.type === AST_NODE_TYPES.ConditionalExpression) {
-                  checkConditionalExpression(argument);
+                if (argument.type === AST_NODE_TYPES.BinaryExpression) {
+                  checkBinaryExpression(argument);
                 }
               });
             }
