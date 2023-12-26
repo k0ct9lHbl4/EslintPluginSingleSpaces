@@ -38,7 +38,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
             return;
           }
 
-          quasis.forEach((templateElement: any) => {
+          quasis.forEach((templateElement) => {
             const value = templateElement.value.raw;
             if (value === " " || value === "  ") {
               checkLiteralValueSpaces(value);
