@@ -7,6 +7,7 @@ import {
 export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
     type: "layout",
+    fixable: "code",
     messages: {
       classNameSingleSpaces: "Only single spaces should be used in className",
       cornerCharactersSpaces: "Corner characters should not be spaces",
@@ -17,13 +18,52 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
     return {
       JSXAttribute(node) {
-        const checkLiteralValueSpaces = (value: unknown) => {
+        const nodes: TSESTree.Node[] = [];
+
+        const checkLiteralValueSpaces = (
+          value: unknown,
+          errorNode: TSESTree.Node
+        ) => {
           if (value && typeof value === "string") {
+            nodes.push(errorNode);
+
             if (value.includes("  ")) {
-              context.report({ node, messageId: "classNameSingleSpaces" });
+              context.report({
+                node,
+                messageId: "classNameSingleSpaces",
+                *fix(fixer) {
+                  for (const _node of nodes) {
+                    yield fixer.replaceText(
+                      _node,
+                      context
+                        .getSourceCode()
+                        .getText(_node)
+                        .replace(/\s+/gm, " ")
+                    );
+                  }
+                },
+              });
             }
             if (value.endsWith(" ") || value.startsWith(" ")) {
-              context.report({ node, messageId: "cornerCharactersSpaces" });
+              context.report({
+                node,
+                messageId: "cornerCharactersSpaces",
+                *fix(fixer) {
+                  for (const _node of nodes) {
+                    const sourceNodeText = context
+                      .getSourceCode()
+                      .getText(_node);
+                    const newNodeText =
+                      sourceNodeText[0] +
+                      sourceNodeText
+                        .slice(1, sourceNodeText.length - 1)
+                        .replaceAll(/^\s+|\s+$/gm, "") +
+                      sourceNodeText[sourceNodeText.length - 1];
+
+                    yield fixer.replaceText(_node, newNodeText);
+                  }
+                },
+              });
             }
           }
         };
@@ -31,27 +71,32 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         const checkTemplateLiteralQuasisSpaces = (
           quasis: TSESTree.TemplateElement[]
         ) => {
-          const notEmptyTemplateElements: string[] = [];
+          const notEmptyTemplateElements: { value: string; index: number }[] =
+            [];
 
           if (quasis.length === 1) {
-            if (quasis[0]) checkLiteralValueSpaces(quasis[0].value.raw);
+            if (quasis[0])
+              checkLiteralValueSpaces(quasis[0].value.raw, quasis[0]);
             return;
           }
 
-          quasis.forEach((templateElement) => {
+          quasis.forEach((templateElement, index) => {
             const value = templateElement.value.raw;
             if (value === " " || value === "  ") {
-              checkLiteralValueSpaces(value);
+              checkLiteralValueSpaces(value, templateElement);
               return;
             }
             const trimmedValue = value.slice(1, value.length - 1);
             if (trimmedValue) {
-              notEmptyTemplateElements.push(trimmedValue);
+              notEmptyTemplateElements.push({ value: trimmedValue, index });
             }
           });
 
-          notEmptyTemplateElements.forEach((templateElement) => {
-            checkLiteralValueSpaces(templateElement);
+          notEmptyTemplateElements.forEach(({ value, index }) => {
+            const node = quasis[index];
+            if (node) {
+              checkLiteralValueSpaces(value, node);
+            }
           });
         };
         const checkTemplateLiteralExpressionsSpaces = (
@@ -59,7 +104,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         ) => {
           expressions.forEach((expression) => {
             if (expression.type === AST_NODE_TYPES.Literal) {
-              checkLiteralValueSpaces(expression.value);
+              checkLiteralValueSpaces(expression.value, expression);
             }
             if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
               checkConditionalExpression(expression);
@@ -77,10 +122,16 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           expression: TSESTree.ConditionalExpression
         ) => {
           if (expression.consequent.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.consequent.value);
+            checkLiteralValueSpaces(
+              expression.consequent.value,
+              expression.consequent
+            );
           }
           if (expression.alternate.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.alternate.value);
+            checkLiteralValueSpaces(
+              expression.alternate.value,
+              expression.alternate
+            );
           }
           if (expression.consequent.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.consequent.quasis);
@@ -122,7 +173,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           expression: TSESTree.LogicalExpression
         ) => {
           if (expression.right.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.right.value);
+            checkLiteralValueSpaces(expression.right.value, expression.right);
           }
           if (expression.right.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.right.quasis);
@@ -143,10 +194,10 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           expression: TSESTree.BinaryExpression
         ) => {
           if (expression.left.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.left.value);
+            checkLiteralValueSpaces(expression.left.value, expression.left);
           }
           if (expression.right.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.right.value);
+            checkLiteralValueSpaces(expression.right.value, expression.right);
           }
           if (expression.left.type === AST_NODE_TYPES.TemplateLiteral) {
             checkTemplateLiteralQuasisSpaces(expression.left.quasis);
@@ -181,14 +232,14 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
 
         if (isClassName && attributeValue) {
           if (attributeValue.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(attributeValue.value);
+            checkLiteralValueSpaces(attributeValue.value, attributeValue);
           }
 
           if (attributeValue.type === AST_NODE_TYPES.JSXExpressionContainer) {
             const expression = attributeValue.expression;
 
             if (expression.type === AST_NODE_TYPES.Literal) {
-              checkLiteralValueSpaces(expression.value);
+              checkLiteralValueSpaces(expression.value, expression);
             }
 
             if (expression.type === AST_NODE_TYPES.TemplateLiteral) {
@@ -211,7 +262,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
             if (expression.type === AST_NODE_TYPES.CallExpression) {
               expression.arguments.forEach((argument) => {
                 if (argument.type === AST_NODE_TYPES.Literal) {
-                  checkLiteralValueSpaces(argument.value);
+                  checkLiteralValueSpaces(argument.value, argument);
                 }
 
                 if (argument.type === AST_NODE_TYPES.TemplateLiteral) {

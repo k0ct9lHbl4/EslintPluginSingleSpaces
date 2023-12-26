@@ -7,7 +7,7 @@ export default function Home() {
     <main
       className={`${
         randomBoolean ? "text-red-500" : "text-red-800"
-      } flex min-h-screen flex-col items-center whitespace-nowrap justify-between p-24 ${"text-red-500"}`}
+      }flex min-h-screen flex-col items-center whitespace-nowrap justify-between p-24 ${"text-red-500"}`}
     >
       <div
         className={
