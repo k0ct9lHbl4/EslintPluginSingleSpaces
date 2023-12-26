@@ -18,29 +18,23 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
     return {
       JSXAttribute(node) {
-        const nodes: TSESTree.Node[] = [];
-
         const checkLiteralValueSpaces = (
           value: unknown,
           errorNode: TSESTree.Node
         ) => {
           if (value && typeof value === "string") {
-            nodes.push(errorNode);
-
             if (value.includes("  ")) {
               context.report({
                 node,
                 messageId: "classNameSingleSpaces",
-                *fix(fixer) {
-                  for (const _node of nodes) {
-                    yield fixer.replaceText(
-                      _node,
-                      context
-                        .getSourceCode()
-                        .getText(_node)
-                        .replace(/\s+/gm, " ")
-                    );
-                  }
+                fix(fixer) {
+                  return fixer.replaceText(
+                    errorNode,
+                    context
+                      .getSourceCode()
+                      .getText(errorNode)
+                      .replace(/\s+/gm, " ")
+                  );
                 },
               });
             }
@@ -48,20 +42,18 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
               context.report({
                 node,
                 messageId: "cornerCharactersSpaces",
-                *fix(fixer) {
-                  for (const _node of nodes) {
-                    const sourceNodeText = context
-                      .getSourceCode()
-                      .getText(_node);
-                    const newNodeText =
-                      sourceNodeText[0] +
-                      sourceNodeText
-                        .slice(1, sourceNodeText.length - 1)
-                        .replaceAll(/^\s+|\s+$/gm, "") +
-                      sourceNodeText[sourceNodeText.length - 1];
+                fix(fixer) {
+                  const sourceNodeText = context
+                    .getSourceCode()
+                    .getText(errorNode);
+                  const newNodeText =
+                    sourceNodeText[0] +
+                    sourceNodeText
+                      .slice(1, sourceNodeText.length - 1)
+                      .replaceAll(/^\s+|\s+$/gm, "") +
+                    sourceNodeText[sourceNodeText.length - 1];
 
-                    yield fixer.replaceText(_node, newNodeText);
-                  }
+                  return fixer.replaceText(errorNode, newNodeText);
                 },
               });
             }

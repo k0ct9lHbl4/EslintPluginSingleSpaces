@@ -28,7 +28,7 @@ export default function Home() {
         </p>
         <p
           className={`text-blue-700 ${
-            true ? (true ? "font-semibold" : "bg-black") : ""
+            true ? (true ? "font-semibold text-black" : "bg-white") : ""
           }`}
         >
           JSXExpression multiple template className
@@ -45,7 +45,7 @@ export default function Home() {
               (!randomBoolean
                 ? `${
                     randomBoolean ? `whitespace-normal` : "whitespace-nowrap"
-                  } text-red-50`
+                  }text-red-50`
                 : "text-green-50"),
             randomBoolean ? "text-red-50" : "text-green-50",
             randomBoolean
