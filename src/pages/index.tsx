@@ -19,9 +19,7 @@ export default function Home() {
         <p className="text-green-600">Not empty literal className</p>
         <p className="">Empty literal className</p>
         <p className={""}>JSXExpression empty className</p>
-        <p className={randomBoolean ? "1" : "2"}>
-          JSXExpression empty className
-        </p>
+        <p className={randomBoolean ? "1" : "2"}>JSXExpression empty className</p>
         <p className={"randomBoolean" && "1"}>JSXExpression empty className</p>
         <p className={`text-blue-700 ${true ? "font-semibold" : ""}`}>
           JSXExpression template className
@@ -43,20 +41,13 @@ export default function Home() {
             randomBoolean && `text-center`,
             randomBoolean &&
               (!randomBoolean
-                ? `${
-                    randomBoolean ? `whitespace-normal` : "whitespace-nowrap"
-                  }text-red-50`
+                ? `${randomBoolean ? `whitespace-normal` : "whitespace-nowrap"}text-red-50`
                 : "text-green-50"),
             randomBoolean ? "text-red-50" : "text-green-50",
             randomBoolean
               ? true
-                ? `text-wrap ${
-                    randomBoolean
-                      ? "1"
-                        ? randomBoolean && "5"
-                        : "2" + "3"
-                      : "1"
-                  }` + "text-sm"
+                ? `text-wrap ${randomBoolean ? ("1" ? randomBoolean && "5" : "2" + "3") : "1"}` +
+                  "text-sm"
                 : "text-red-50"
               : "text-green-50",
             "z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex" +

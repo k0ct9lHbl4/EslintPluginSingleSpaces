@@ -1,8 +1,4 @@
-import {
-  ESLintUtils,
-  AST_NODE_TYPES,
-  TSESTree,
-} from "@typescript-eslint/utils";
+import { ESLintUtils, AST_NODE_TYPES, TSESTree } from "@typescript-eslint/utils";
 
 export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   meta: {
@@ -18,39 +14,32 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
     return {
       JSXAttribute(node) {
-        const checkLiteralValueSpaces = (
-          value: unknown,
-          errorNode: TSESTree.Node
-        ) => {
+        const checkLiteralValueSpaces = (value: unknown, errorNode: TSESTree.Node) => {
           if (value && typeof value === "string") {
-            if (value.includes("  ")) {
+            if (/\s\s/gm.test(value)) {
               context.report({
                 node,
                 messageId: "classNameSingleSpaces",
                 fix(fixer) {
                   return fixer.replaceText(
                     errorNode,
-                    context
-                      .getSourceCode()
-                      .getText(errorNode)
-                      .replace(/\s+/gm, " ")
+                    context.getSourceCode().getText(errorNode).replace(/\s+/gm, " ")
                   );
                 },
               });
             }
-            if (value.endsWith(" ") || value.startsWith(" ")) {
+            if (/^\s+|\s+$/gm.test(value)) {
               context.report({
                 node,
                 messageId: "cornerCharactersSpaces",
                 fix(fixer) {
-                  const sourceNodeText = context
-                    .getSourceCode()
-                    .getText(errorNode);
+                  const sourceNodeText = context.getSourceCode().getText(errorNode);
                   const newNodeText =
                     sourceNodeText[0] +
                     sourceNodeText
                       .slice(1, sourceNodeText.length - 1)
-                      .replaceAll(/^\s+|\s+$/gm, "") +
+                      .replace(/\s+/gm, " ")
+                      .replace(/^\s+|\s+$/gm, "") +
                     sourceNodeText[sourceNodeText.length - 1];
 
                   return fixer.replaceText(errorNode, newNodeText);
@@ -60,162 +49,109 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           }
         };
 
-        const checkTemplateLiteralQuasisSpaces = (
-          quasis: TSESTree.TemplateElement[]
-        ) => {
-          const notEmptyTemplateElements: { value: string; index: number }[] =
-            [];
-
-          if (quasis.length === 1) {
-            if (quasis[0])
-              checkLiteralValueSpaces(quasis[0].value.raw, quasis[0]);
+        const checkTemplateLiteralQuasisSpaces = (quasis: TSESTree.TemplateElement[]) => {
+          if (quasis.length === 1 && quasis[0]) {
+            checkLiteralValueSpaces(quasis[0].value.raw, quasis[0]);
             return;
           }
 
-          quasis.forEach((templateElement, index) => {
+          quasis.forEach((templateElement) => {
             const value = templateElement.value.raw;
             if (value === " " || value === "  ") {
               checkLiteralValueSpaces(value, templateElement);
-              return;
-            }
-            const trimmedValue = value.slice(1, value.length - 1);
-            if (trimmedValue) {
-              notEmptyTemplateElements.push({ value: trimmedValue, index });
-            }
-          });
-
-          notEmptyTemplateElements.forEach(({ value, index }) => {
-            const node = quasis[index];
-            if (node) {
-              checkLiteralValueSpaces(value, node);
+            } else {
+              checkLiteralValueSpaces(value.slice(1, value.length - 1), templateElement);
             }
           });
         };
-        const checkTemplateLiteralExpressionsSpaces = (
-          expressions: TSESTree.Expression[]
-        ) => {
+        const checkTemplateLiteralExpressionsSpaces = (expressions: TSESTree.Expression[]) => {
           expressions.forEach((expression) => {
             if (expression.type === AST_NODE_TYPES.Literal) {
               checkLiteralValueSpaces(expression.value, expression);
-            }
-            if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
+            } else if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
               checkConditionalExpression(expression);
-            }
-            if (expression.type === AST_NODE_TYPES.LogicalExpression) {
+            } else if (expression.type === AST_NODE_TYPES.LogicalExpression) {
               checkLogicalExpression(expression);
-            }
-            if (expression.type === AST_NODE_TYPES.BinaryExpression) {
+            } else if (expression.type === AST_NODE_TYPES.BinaryExpression) {
               checkBinaryExpression(expression);
             }
           });
         };
 
-        const checkConditionalExpression = (
-          expression: TSESTree.ConditionalExpression
-        ) => {
-          if (expression.consequent.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(
-              expression.consequent.value,
-              expression.consequent
-            );
+        const checkConditionalExpression = (expression: TSESTree.ConditionalExpression) => {
+          const { consequent, alternate } = expression;
+
+          if (consequent.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(consequent.value, consequent);
+          } else if (consequent.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(consequent.quasis);
+            checkTemplateLiteralExpressionsSpaces(consequent.expressions);
+          } else if (consequent.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(consequent);
+          } else if (consequent.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(consequent);
+          } else if (consequent.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(consequent);
           }
-          if (expression.alternate.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(
-              expression.alternate.value,
-              expression.alternate
-            );
-          }
-          if (expression.consequent.type === AST_NODE_TYPES.TemplateLiteral) {
-            checkTemplateLiteralQuasisSpaces(expression.consequent.quasis);
-            checkTemplateLiteralExpressionsSpaces(
-              expression.consequent.expressions
-            );
-          }
-          if (expression.alternate.type === AST_NODE_TYPES.TemplateLiteral) {
-            checkTemplateLiteralQuasisSpaces(expression.alternate.quasis);
-            checkTemplateLiteralExpressionsSpaces(
-              expression.alternate.expressions
-            );
-          }
-          if (
-            expression.consequent.type === AST_NODE_TYPES.ConditionalExpression
-          ) {
-            checkConditionalExpression(expression.consequent);
-          }
-          if (
-            expression.alternate.type === AST_NODE_TYPES.ConditionalExpression
-          ) {
-            checkConditionalExpression(expression.alternate);
-          }
-          if (expression.consequent.type === AST_NODE_TYPES.LogicalExpression) {
-            checkLogicalExpression(expression.consequent);
-          }
-          if (expression.alternate.type === AST_NODE_TYPES.LogicalExpression) {
-            checkLogicalExpression(expression.alternate);
-          }
-          if (expression.consequent.type === AST_NODE_TYPES.BinaryExpression) {
-            checkBinaryExpression(expression.consequent);
-          }
-          if (expression.alternate.type === AST_NODE_TYPES.BinaryExpression) {
-            checkBinaryExpression(expression.alternate);
+
+          if (alternate.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(alternate.value, alternate);
+          } else if (alternate.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(alternate.quasis);
+            checkTemplateLiteralExpressionsSpaces(alternate.expressions);
+          } else if (alternate.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(alternate);
+          } else if (alternate.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(alternate);
+          } else if (alternate.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(alternate);
           }
         };
 
-        const checkLogicalExpression = (
-          expression: TSESTree.LogicalExpression
-        ) => {
-          if (expression.right.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.right.value, expression.right);
-          }
-          if (expression.right.type === AST_NODE_TYPES.TemplateLiteral) {
-            checkTemplateLiteralQuasisSpaces(expression.right.quasis);
-            checkTemplateLiteralExpressionsSpaces(expression.right.expressions);
-          }
-          if (expression.right.type === AST_NODE_TYPES.ConditionalExpression) {
-            checkConditionalExpression(expression.right);
-          }
-          if (expression.right.type === AST_NODE_TYPES.LogicalExpression) {
-            checkLogicalExpression(expression.right);
-          }
-          if (expression.right.type === AST_NODE_TYPES.BinaryExpression) {
-            checkBinaryExpression(expression.right);
+        const checkLogicalExpression = (expression: TSESTree.LogicalExpression) => {
+          const { right: rightPart } = expression;
+
+          if (rightPart.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(rightPart.value, rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(rightPart.quasis);
+            checkTemplateLiteralExpressionsSpaces(rightPart.expressions);
+          } else if (rightPart.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(rightPart);
           }
         };
 
-        const checkBinaryExpression = (
-          expression: TSESTree.BinaryExpression
-        ) => {
-          if (expression.left.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.left.value, expression.left);
+        const checkBinaryExpression = (expression: TSESTree.BinaryExpression) => {
+          const { left: leftPart, right: rightPart } = expression;
+
+          if (leftPart.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(leftPart.value, leftPart);
+          } else if (leftPart.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(leftPart.quasis);
+            checkTemplateLiteralExpressionsSpaces(leftPart.expressions);
+          } else if (leftPart.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(leftPart);
+          } else if (leftPart.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(leftPart);
+          } else if (leftPart.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(leftPart);
           }
-          if (expression.right.type === AST_NODE_TYPES.Literal) {
-            checkLiteralValueSpaces(expression.right.value, expression.right);
-          }
-          if (expression.left.type === AST_NODE_TYPES.TemplateLiteral) {
-            checkTemplateLiteralQuasisSpaces(expression.left.quasis);
-            checkTemplateLiteralExpressionsSpaces(expression.left.expressions);
-          }
-          if (expression.right.type === AST_NODE_TYPES.TemplateLiteral) {
-            checkTemplateLiteralQuasisSpaces(expression.right.quasis);
-            checkTemplateLiteralExpressionsSpaces(expression.right.expressions);
-          }
-          if (expression.left.type === AST_NODE_TYPES.ConditionalExpression) {
-            checkConditionalExpression(expression.left);
-          }
-          if (expression.right.type === AST_NODE_TYPES.ConditionalExpression) {
-            checkConditionalExpression(expression.right);
-          }
-          if (expression.left.type === AST_NODE_TYPES.LogicalExpression) {
-            checkLogicalExpression(expression.left);
-          }
-          if (expression.right.type === AST_NODE_TYPES.LogicalExpression) {
-            checkLogicalExpression(expression.right);
-          }
-          if (expression.left.type === AST_NODE_TYPES.BinaryExpression) {
-            checkBinaryExpression(expression.left);
-          }
-          if (expression.right.type === AST_NODE_TYPES.BinaryExpression) {
-            checkBinaryExpression(expression.right);
+
+          if (rightPart.type === AST_NODE_TYPES.Literal) {
+            checkLiteralValueSpaces(rightPart.value, rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.TemplateLiteral) {
+            checkTemplateLiteralQuasisSpaces(rightPart.quasis);
+            checkTemplateLiteralExpressionsSpaces(rightPart.expressions);
+          } else if (rightPart.type === AST_NODE_TYPES.ConditionalExpression) {
+            checkConditionalExpression(rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.LogicalExpression) {
+            checkLogicalExpression(rightPart);
+          } else if (rightPart.type === AST_NODE_TYPES.BinaryExpression) {
+            checkBinaryExpression(rightPart);
           }
         };
 
@@ -225,52 +161,32 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
         if (isClassName && attributeValue) {
           if (attributeValue.type === AST_NODE_TYPES.Literal) {
             checkLiteralValueSpaces(attributeValue.value, attributeValue);
-          }
-
-          if (attributeValue.type === AST_NODE_TYPES.JSXExpressionContainer) {
+          } else if (attributeValue.type === AST_NODE_TYPES.JSXExpressionContainer) {
             const expression = attributeValue.expression;
 
             if (expression.type === AST_NODE_TYPES.Literal) {
               checkLiteralValueSpaces(expression.value, expression);
-            }
-
-            if (expression.type === AST_NODE_TYPES.TemplateLiteral) {
+            } else if (expression.type === AST_NODE_TYPES.TemplateLiteral) {
               checkTemplateLiteralQuasisSpaces(expression.quasis);
               checkTemplateLiteralExpressionsSpaces(expression.expressions);
-            }
-
-            if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
+            } else if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
               checkConditionalExpression(expression);
-            }
-
-            if (expression.type === AST_NODE_TYPES.LogicalExpression) {
+            } else if (expression.type === AST_NODE_TYPES.LogicalExpression) {
               checkLogicalExpression(expression);
-            }
-
-            if (expression.type === AST_NODE_TYPES.BinaryExpression) {
+            } else if (expression.type === AST_NODE_TYPES.BinaryExpression) {
               checkBinaryExpression(expression);
-            }
-
-            if (expression.type === AST_NODE_TYPES.CallExpression) {
+            } else if (expression.type === AST_NODE_TYPES.CallExpression) {
               expression.arguments.forEach((argument) => {
                 if (argument.type === AST_NODE_TYPES.Literal) {
                   checkLiteralValueSpaces(argument.value, argument);
-                }
-
-                if (argument.type === AST_NODE_TYPES.TemplateLiteral) {
+                } else if (argument.type === AST_NODE_TYPES.TemplateLiteral) {
                   checkTemplateLiteralQuasisSpaces(argument.quasis);
                   checkTemplateLiteralExpressionsSpaces(argument.expressions);
-                }
-
-                if (argument.type === AST_NODE_TYPES.ConditionalExpression) {
+                } else if (argument.type === AST_NODE_TYPES.ConditionalExpression) {
                   checkConditionalExpression(argument);
-                }
-
-                if (argument.type === AST_NODE_TYPES.LogicalExpression) {
+                } else if (argument.type === AST_NODE_TYPES.LogicalExpression) {
                   checkLogicalExpression(argument);
-                }
-
-                if (argument.type === AST_NODE_TYPES.BinaryExpression) {
+                } else if (argument.type === AST_NODE_TYPES.BinaryExpression) {
                   checkBinaryExpression(argument);
                 }
               });
