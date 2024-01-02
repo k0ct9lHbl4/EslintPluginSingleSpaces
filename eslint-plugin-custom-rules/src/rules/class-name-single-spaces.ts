@@ -18,7 +18,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
           if (value && typeof value === "string") {
             if (/\s\s/gm.test(value)) {
               context.report({
-                node,
+                node: errorNode,
                 messageId: "classNameSingleSpaces",
                 fix(fixer) {
                   return fixer.replaceText(
@@ -30,7 +30,7 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
             }
             if (/^\s+|\s+$/gm.test(value)) {
               context.report({
-                node,
+                node: errorNode,
                 messageId: "cornerCharactersSpaces",
                 fix(fixer) {
                   const sourceNodeText = context.getSourceCode().getText(errorNode);
