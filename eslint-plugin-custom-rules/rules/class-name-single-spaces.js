@@ -1,6 +1,12 @@
-import { ESLintUtils, AST_NODE_TYPES, TSESTree } from "@typescript-eslint/utils";
+var LITERAL = "Literal";
+var TEMPLATE_LITERAL = "TemplateLiteral";
+var JSX_EXPRESSION_CONTAINER = "JSXExpressionContainer";
+var CONDITIONAL_EXPRESSION = "ConditionalExpression";
+var LOGICAL_EXPRESSION = "LogicalExpression";
+var BINARY_EXPRESSION = "BinaryExpression";
+var CALL_EXPRESSION = "CallExpression";
 
-export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
+module.exports = {
   meta: {
     type: "layout",
     fixable: "code",
@@ -15,8 +21,8 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
     return {
       JSXAttribute(node) {
         if (node.name.name === "className" && node.value !== null) {
-          function checkType(node: TSESTree.Node) {
-            function checkValueSpaces(value: unknown) {
+          function checkType(node) {
+            function checkValueSpaces(value) {
               if (value && typeof value === "string") {
                 if (/\s\s/gm.test(value)) {
                   context.report({
@@ -52,9 +58,9 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
               }
             }
 
-            if (node.type === AST_NODE_TYPES.Literal) {
+            if (node.type === LITERAL) {
               checkValueSpaces(node.value);
-            } else if (node.type === AST_NODE_TYPES.TemplateLiteral) {
+            } else if (node.type === TEMPLATE_LITERAL) {
               if (node.quasis.length === 1 && node.quasis[0]) {
                 checkValueSpaces(node.quasis[0].value.raw);
               } else {
@@ -67,17 +73,17 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
                   }
                 });
               }
-            } else if (node.type === AST_NODE_TYPES.JSXExpressionContainer) {
+            } else if (node.type === JSX_EXPRESSION_CONTAINER) {
               checkType(node.expression);
-            } else if (node.type === AST_NODE_TYPES.ConditionalExpression) {
+            } else if (node.type === CONDITIONAL_EXPRESSION) {
               checkType(node.consequent);
               checkType(node.alternate);
-            } else if (node.type === AST_NODE_TYPES.LogicalExpression) {
+            } else if (node.type === LOGICAL_EXPRESSION) {
               checkType(node.right);
-            } else if (node.type === AST_NODE_TYPES.BinaryExpression) {
+            } else if (node.type === BINARY_EXPRESSION) {
               checkType(node.left);
               checkType(node.right);
-            } else if (node.type === AST_NODE_TYPES.CallExpression) {
+            } else if (node.type === CALL_EXPRESSION) {
               node.arguments.forEach((argument) => checkType(argument));
             }
           }
@@ -87,4 +93,4 @@ export const classNameSingleSpacesRule = ESLintUtils.RuleCreator.withoutDocs({
       },
     };
   },
-});
+};
