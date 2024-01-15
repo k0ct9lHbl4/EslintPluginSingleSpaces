@@ -43,7 +43,7 @@ Before plugin autofix:
     <div
         className={
           "  z-10    items-center  justify-between   " +
-          (true ? " text-center " : "text-right  ") +
+          (true ? " text-center " + "  class" : "text-right  ") +
           (false && " text-clip text-ref")
         }
     >Combined className expression</div>
@@ -69,7 +69,7 @@ After plugin autofix:
     <div
         className={
           "z-10 items-center justify-between" +
-          (true ? "text-center" : "text-right") +
+          (true ? "text-center" + "class" : "text-right") +
           (false && "text-clip text-ref")
         }
     >Combined className expression</div>
@@ -79,7 +79,7 @@ After plugin autofix:
       `font-semibold text-green`,
       true &&
         (!false
-          ? `${true ? `whitespace-normal` : "class1  class2"} text-red-50`
+          ? `${true ? `whitespace-normal` : "class1 class2"} text-red-50`
           : "text-green-50"),
       false ? "text-red-50" : "text-green-50"
     )}
