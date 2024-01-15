@@ -2,7 +2,7 @@
 
 Supports a lot of cases, including combined and tw-merge library
 
-# Quick start:
+## Quick start:
 
 ```bash
 npm i -D eslint-plugin-class-name-single-spaces
@@ -33,4 +33,58 @@ module.exports  = {
 	},
 	ignorePatterns: ["node_modules", ".eslintrc.js"],
 };
+```
+
+## Usage
+Before plugin autofix:
+```bash
+<div>
+    <p className=" class1   class2 class3  ">Not empty literal className</p>
+    <div
+        className={
+          "  z-10    items-center  justify-between   " +
+          (true ? " text-center " : "text-right  ") +
+          (false && " text-clip text-ref")
+        }
+    >Combined className expression</div>
+    <p
+    className={twMerge(
+      "text-nowrap  text-yellow-600  ",
+      ` font-semibold   text-green`,
+      true &&
+        (!false
+          ? `${true ? `  whitespace-normal` : "  class1  class2"}  text-red-50`
+          : "   text-green-50 "),
+      false ? "  text-red-50 " : "  text-green-50  "
+    )}
+  >
+    TwMerge combined className
+  </p>
+</div>
+```
+After plugin autofix:
+```bash
+<div>
+    <p className="class1 class2 class3">Not empty literal className</p>
+    <div
+        className={
+          "z-10 items-center justify-between" +
+          (true ? "text-center" : "text-right") +
+          (false && "text-clip text-ref")
+        }
+    >Combined className expression</div>
+    <p
+    className={twMerge(
+      "text-nowrap text-yellow-600",
+      `font-semibold text-green`,
+      true &&
+        (!false
+          ? `${true ? `whitespace-normal` : "class1  class2"} text-red-50`
+          : "text-green-50"),
+      false ? "text-red-50" : "text-green-50"
+    )}
+  >
+    TwMerge combined className
+  </p>
+</div>
 ```
