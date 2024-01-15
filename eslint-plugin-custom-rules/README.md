@@ -36,18 +36,20 @@ module.exports  = {
 ```
 
 ## Usage
-Before plugin autofix:
+Before autofix by plugin:
 ```bash
 <div>
-    <p className=" class1   class2 class3  ">Not empty literal className</p>
-    <div
-        className={
-          "  z-10    items-center  justify-between   " +
-          (true ? " text-center " + "  class" : "text-right  ") +
-          (false && " text-clip text-ref")
-        }
-    >Combined className expression</div>
-    <p
+  <p className=" class1   class2 class3  ">Not empty literal className</p>
+  <div
+      className={
+        "  z-10    items-center  justify-between   " +
+        (true ? " text-center " + "  class" : "text-right  ") +
+        (false && " text-clip text-ref")
+      }
+  >
+    Combined className expression
+  </div>
+  <p
     className={twMerge(
       "text-nowrap  text-yellow-600  ",
       ` font-semibold   text-green`,
@@ -62,18 +64,20 @@ Before plugin autofix:
   </p>
 </div>
 ```
-After plugin autofix:
+After autofix by plugin:
 ```bash
 <div>
-    <p className="class1 class2 class3">Not empty literal className</p>
-    <div
-        className={
-          "z-10 items-center justify-between" +
-          (true ? "text-center" + "class" : "text-right") +
-          (false && "text-clip text-ref")
-        }
-    >Combined className expression</div>
-    <p
+  <p className="class1 class2 class3">Not empty literal className</p>
+  <div
+    className={
+      "z-10 items-center justify-between" +
+      (true ? "text-center" + "class" : "text-right") +
+      (false && "text-clip text-ref")
+    }
+  >
+    Combined className expression
+  </div>
+  <p
     className={twMerge(
       "text-nowrap text-yellow-600",
       `font-semibold text-green`,
