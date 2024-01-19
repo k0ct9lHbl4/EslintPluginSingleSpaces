@@ -21,7 +21,7 @@ module.exports = {
     return {
       JSXAttribute(node) {
         if (node.name.name === "className" && node.value !== null) {
-          function checkType(node) {
+          function checkType(node, skipCheckCornerSpaces = false) {
             function checkValueSpaces(value) {
               if (value && typeof value === "string") {
                 if (/\s\s/gm.test(value)) {
@@ -37,7 +37,7 @@ module.exports = {
                   });
                 }
 
-                if (/^\s+|\s+$/gm.test(value)) {
+                if (/^\s+|\s+$/gm.test(value) && !skipCheckCornerSpaces) {
                   context.report({
                     node,
                     messageId: "cornerCharactersSpaces",
@@ -81,8 +81,8 @@ module.exports = {
             } else if (node.type === LOGICAL_EXPRESSION) {
               checkType(node.right);
             } else if (node.type === BINARY_EXPRESSION) {
-              checkType(node.left);
-              checkType(node.right);
+              checkType(node.left, true);
+              checkType(node.right, true);
             } else if (node.type === CALL_EXPRESSION) {
               node.arguments.forEach((argument) => checkType(argument));
             }
