@@ -43,7 +43,7 @@ Before autofix by plugin:
   <div
       className={
         "  z-10    items-center  justify-between   " +
-        (true ? " text-center " + "  class" : "text-right  ") +
+        (true ? "text-center " + "  class" : "text-right  ") +
         (false && " text-clip text-ref")
       }
   >
@@ -70,9 +70,9 @@ After autofix by plugin:
   <p className="class1 class2 class3">Not empty literal className</p>
   <div
     className={
-      "z-10 items-center justify-between" +
-      (true ? "text-center" + "class" : "text-right") +
-      (false && "text-clip text-ref")
+      " z-10 items-center justify-between " +
+      (true ? "text-center " + " class" : "text-right") +
+      (false && "text-clip text-ref")r
     }
   >
     Combined className expression

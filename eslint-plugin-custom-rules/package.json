@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-class-name-single-spaces",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "Eslint plugin for linting and formatting spaces in className",
   "main": "./index.js",
   "keywords": [
